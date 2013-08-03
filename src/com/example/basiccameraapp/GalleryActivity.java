@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -183,36 +184,10 @@ public class GalleryActivity extends Activity {
 				imageView = (ImageView) convertView;
 			}
 
-			final String path = (String) getItem(position);
-			/*
-			Bitmap bmp = null;
-			try {
-				FileInputStream is = openFileInput(path);
-				bmp = BitmapFactory.decodeStream(is);
-				is.close();
-			} catch (FileNotFoundException e) {
-				Log.e(TAG, "Couldn't find file " + path);
-				e.printStackTrace();
-			} catch (IOException e) {
-				Log.e(TAG, "Couldn't close file " + path);
-				e.printStackTrace();
-			}
-			*/
+			imageView.setImageResource(android.R.drawable.ic_menu_help);
+			ImageViewData img = new ImageViewData(imageView, (String) getItem(position));
+			new ImageLoader().execute(img);
 
-			byte[] data = GalleryActivity.readBytesFromPath(GalleryActivity.this, path);
-			Bitmap bmp = GalleryActivity.decodeSampledBitmapFromByteArray(data, 100, 100);
-
-			if (bmp != null) {
-				imageView.setImageBitmap(bmp);
-				imageView.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						viewImage(path);
-					}
-				});
-			} else {
-				imageView.setImageResource(android.R.drawable.ic_menu_help);
-			}
 			return imageView;
 		}
 
@@ -222,5 +197,47 @@ public class GalleryActivity extends Activity {
 		}
 
 	}
-	
+
+	class ImageLoader extends AsyncTask<ImageViewData, Void, ImageViewData[]> {
+
+		@Override
+		protected ImageViewData[] doInBackground(ImageViewData... images) {
+			for (ImageViewData image : images) {
+				byte[] data = GalleryActivity.readBytesFromPath(GalleryActivity.this, image.path);
+				Bitmap bmp = GalleryActivity.decodeSampledBitmapFromByteArray(data, 100, 100);
+
+				image.bmp = bmp;
+			}
+			return images;
+		}
+
+		@Override
+		protected void onPostExecute(ImageViewData[] images) {
+			for (final ImageViewData image : images) {
+				ImageView imageView = image.imageView;
+				if (image.bmp != null) {
+					imageView.setImageBitmap(image.bmp);
+					imageView.setOnClickListener(new OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							viewImage(image.path);
+						}
+					});
+				} else {
+					imageView.setImageResource(android.R.drawable.ic_menu_help);
+				}
+			}
+		}
+
+	}
+
+	class ImageViewData {
+		public ImageView imageView;
+		public String path;
+		public Bitmap bmp;
+		public ImageViewData(ImageView imageView, String path) {
+			this.imageView = imageView;
+			this.path = path;
+		}
+	}
 }
