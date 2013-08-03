@@ -15,7 +15,7 @@ import android.widget.ImageView;
 import com.example.basiccameraapp.application.BasicCameraApplication;
 
 public class GalleryAdapter extends BaseAdapter {
-	static String TAG = "GalleryAdapter";
+	static String TAG = GalleryAdapter.class.getName();
 	ImageCache mImageCache;
 	Context mContext;
 	String[] mImagePaths;

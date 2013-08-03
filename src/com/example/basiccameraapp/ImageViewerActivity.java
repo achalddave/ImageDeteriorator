@@ -11,26 +11,26 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class ImageViewerActivity extends Activity {
-	ImageView currentImage;
-	SeekBar artifactSlider;
+	static String TAG = ImageViewerActivity.class.getName();
+	ImageView mCurrentImage;
+	SeekBar mAtifactSlider;
 	Bitmap mBitmap;
 	String mPath;
-	ArtifactInducer artifactInducer;
-	static String TAG = ImageViewerActivity.class.getName();
+	ArtifactInducer mArtifactInducer;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_image_viewer);
 
-		currentImage = (ImageView) findViewById(R.id.currentImage);
-		artifactSlider = (SeekBar) findViewById(R.id.artifactSlider);
-		artifactInducer = new BlurArtifactInducer();
+		mCurrentImage = (ImageView) findViewById(R.id.currentImage);
+		mAtifactSlider = (SeekBar) findViewById(R.id.artifactSlider);
+		mArtifactInducer = new BlurArtifactInducer();
 
 		Intent intent = getIntent();
 		mPath = intent.getStringExtra(GalleryActivity.INTENT_KEY_PATH);
 
-		artifactSlider.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+		mAtifactSlider.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 
 			@Override
 			public void onProgressChanged(SeekBar slider, int progress, boolean fromUser) {
@@ -52,8 +52,8 @@ public class ImageViewerActivity extends Activity {
 		super.onWindowFocusChanged(hasFocus);
 		if (mBitmap == null) {
 			mBitmap = GalleryActivity.decodeSampledBitmapFromPath(
-					getApplicationContext(), mPath, currentImage.getHeight(),
-					currentImage.getWidth());
+					getApplicationContext(), mPath, mCurrentImage.getHeight(),
+					mCurrentImage.getWidth());
 			updateImage();
 		}
 	}
@@ -67,7 +67,7 @@ public class ImageViewerActivity extends Activity {
 
 	private void induceArtifacts(float intensity) {
 		Log.d(TAG, "Intensity: " + intensity);
-		updateImage(artifactInducer.induceArtifacts(mBitmap, intensity));
+		updateImage(mArtifactInducer.induceArtifacts(mBitmap, intensity));
 	}
 
 	private void updateImage() {
@@ -75,6 +75,6 @@ public class ImageViewerActivity extends Activity {
 	}
 
 	private void updateImage(Bitmap bmp) {
-		currentImage.setImageBitmap(bmp);
+		mCurrentImage.setImageBitmap(bmp);
 	}
 }

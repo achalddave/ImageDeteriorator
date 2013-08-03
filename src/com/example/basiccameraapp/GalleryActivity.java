@@ -9,26 +9,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.BaseAdapter;
 import android.widget.GridView;
-import android.widget.ImageView;
 
 import com.example.basiccameraapp.application.BasicCameraApplication;
 
 public class GalleryActivity extends Activity {
-	GridView gallery;
 	static String TAG = GalleryActivity.class.getName();
+	GridView mGallery;
 	static String INTENT_KEY_PATH = "path";
-	int numCols = 5;
 	BasicCameraApplication mApp;
 
 	@Override
@@ -42,12 +35,12 @@ public class GalleryActivity extends Activity {
 		setContentView(R.layout.activity_gallery);
 
 		mApp = (BasicCameraApplication) getApplication();
-		if (!mApp.cacheInitialized)
+		if (!mApp.mCacheInitialized)
 			mApp.initImageCache();
 
 		String[] imagePaths = getApplicationContext().fileList();
-		gallery = (GridView) findViewById(R.id.gallery);
-		gallery.setAdapter(new GalleryAdapter(this, imagePaths, mApp.mImageCache));
+		mGallery = (GridView) findViewById(R.id.gallery);
+		mGallery.setAdapter(new GalleryAdapter(this, imagePaths, mApp.mImageCache));
 	}
 
 	@Override

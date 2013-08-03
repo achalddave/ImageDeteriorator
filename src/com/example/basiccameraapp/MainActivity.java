@@ -36,12 +36,12 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 
 public class MainActivity extends Activity {
+	static String TAG = MainActivity.class.getName();
 	Camera mCamera;
 	Preview mPreview;
-	int currentCameraId;
-	String TAG;
-	Button galleryOpener;
-	Button cameraSwitcher;
+	int mCurrentCameraId;
+	Button mGalleryOpener;
+	Button mCameraSwitcher;
 	PictureCallback mPictureCallback;
 
 	@Override
@@ -76,7 +76,7 @@ public class MainActivity extends Activity {
 			}
 		});
 
-		currentCameraId = CameraInfo.CAMERA_FACING_BACK;
+		mCurrentCameraId = CameraInfo.CAMERA_FACING_BACK;
 		TAG = getClass().getName();
 
 		LayoutInflater overlayInflater = LayoutInflater.from(getBaseContext());
@@ -87,8 +87,8 @@ public class MainActivity extends Activity {
 				RelativeLayout.LayoutParams.MATCH_PARENT);
 		this.addContentView(cameraOverlay, cameraOverlayParams);
 
-		galleryOpener = (Button) findViewById(R.id.galleryOpener);
-		cameraSwitcher = (Button) findViewById(R.id.cameraSwitcher);
+		mGalleryOpener = (Button) findViewById(R.id.galleryOpener);
+		mCameraSwitcher = (Button) findViewById(R.id.cameraSwitcher);
 	}
 
 	@Override
@@ -105,7 +105,7 @@ public class MainActivity extends Activity {
 
 	void setupCameraAndPreview() {
 		// Log.d(TAG, "Opening camera " + currentCameraId);
-		mCamera = Camera.open(currentCameraId);
+		mCamera = Camera.open(mCurrentCameraId);
 		mPreview.setCamera(mCamera);
 	}
 
@@ -167,7 +167,7 @@ public class MainActivity extends Activity {
 
 		private int getNeededRotation() {
 			Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
-			Camera.getCameraInfo(currentCameraId, info);
+			Camera.getCameraInfo(mCurrentCameraId, info);
 
 			// angle by which the display is rotated to be upright
 			int rotation = MainActivity.this.getWindowManager()
