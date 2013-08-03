@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import com.example.basiccameraapp.application.BasicCameraApplication;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -50,6 +52,8 @@ public class MainActivity extends Activity {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		// setContentView(R.layout.activity_main);
+		
+		BasicCameraApplication app = (BasicCameraApplication) getApplication();
 
 		mPreview = new Preview(this);
 		setContentView(mPreview);
