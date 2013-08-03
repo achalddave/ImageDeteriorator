@@ -27,7 +27,7 @@ public class GalleryActivity extends Activity {
 	static String TAG;
 	static String PATH = "path";
 	int numCols = 5;
-	
+
 	static {
 		TAG = GalleryActivity.class.getName();
 	}
@@ -80,9 +80,9 @@ public class GalleryActivity extends Activity {
 		final BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
 		BitmapFactory.decodeByteArray(data, 0, data.length, options);
-		
+
 		options.inSampleSize = calculateInSampleSize(options, requestedHeight, requestedWidth);
-		
+
 		options.inJustDecodeBounds = false;
 		return BitmapFactory.decodeByteArray(data, 0, data.length, options);
 	}
@@ -142,7 +142,7 @@ public class GalleryActivity extends Activity {
 		}
 		return null;
 	}
-	
+
 	private void viewImage(String path) {
 		Intent intent = new Intent(this, ImageViewerActivity.class);
 		intent.putExtra(PATH, path);
