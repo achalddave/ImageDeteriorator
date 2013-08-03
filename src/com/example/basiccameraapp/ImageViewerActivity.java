@@ -28,7 +28,7 @@ public class ImageViewerActivity extends Activity {
 		artifactInducer = new BlurArtifactInducer();
 
 		Intent intent = getIntent();
-		mPath = intent.getStringExtra(GalleryActivity.PATH);
+		mPath = intent.getStringExtra(GalleryActivity.INTENT_KEY_PATH);
 
 		artifactSlider.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 

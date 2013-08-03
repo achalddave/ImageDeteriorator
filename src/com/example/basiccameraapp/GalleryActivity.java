@@ -4,8 +4,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import com.example.basiccameraapp.application.BasicCameraApplication;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -24,11 +22,14 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 
+import com.example.basiccameraapp.application.BasicCameraApplication;
+
 public class GalleryActivity extends Activity {
 	GridView gallery;
 	static String TAG = GalleryActivity.class.getName();
-	static String PATH = "path";
+	static String INTENT_KEY_PATH = "path";
 	int numCols = 5;
+	BasicCameraApplication mApp;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -40,9 +41,13 @@ public class GalleryActivity extends Activity {
 
 		setContentView(R.layout.activity_gallery);
 
+		mApp = (BasicCameraApplication) getApplication();
+		if (!mApp.cacheInitialized)
+			mApp.initImageCache();
+
+		String[] imagePaths = getApplicationContext().fileList();
 		gallery = (GridView) findViewById(R.id.gallery);
-		gallery.setAdapter(new GalleryAdapter(this, getApplicationContext()
-				.fileList()));
+		gallery.setAdapter(new GalleryAdapter(this, imagePaths, mApp.mImageCache));
 	}
 
 	@Override
@@ -119,111 +124,10 @@ public class GalleryActivity extends Activity {
 		return b;
 	}
 
-	private void viewImage(String path) {
-		Intent intent = new Intent(this, ImageViewerActivity.class);
-		intent.putExtra(PATH, path);
-		startActivity(intent);
+	static void viewImage(Context context, String path) {
+		Intent intent = new Intent(context, ImageViewerActivity.class);
+		intent.putExtra(INTENT_KEY_PATH, path);
+		context.startActivity(intent);
 	}
 
-	class GalleryAdapter extends BaseAdapter {
-		Context mContext;
-		String[] mImagePaths;
-		Bitmap[] mBitmaps;
-
-		public GalleryAdapter(Context context, String[] imagePaths) {
-			mContext = context;
-			mImagePaths = imagePaths;
-			mBitmaps = new Bitmap[imagePaths.length];
-		}
-
-		@Override
-		public Object getItem(int position) {
-			return mImagePaths[position];
-		}
-
-		@Override
-		public long getItemId(int position) {
-			// not used
-			Log.d(TAG, "Called getItemId on position " + position
-					+ "; this shouldn't happen...");
-			return -1;
-		}
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			ImageView imageView;
-			if (convertView == null) {
-				imageView = new ImageView(mContext);
-				imageView.setLayoutParams(new GridView.LayoutParams(200, 200));
-				imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-				imageView.setPadding(0,10,0,10);
-			} else {
-				imageView = (ImageView) convertView;
-			}
-
-			if (mBitmaps[position] == null) {
-				imageView.setImageResource(android.R.drawable.ic_menu_help);
-				ImageLoaderData img = new ImageLoaderData(imageView, this, position);
-				new ImageLoader().execute(img);
-			} else {
-				imageView.setImageBitmap(mBitmaps[position]);
-			}
-
-			return imageView;
-		}
-
-		@Override
-		public int getCount() {
-			return mImagePaths.length;
-		}
-
-	}
-
-	class ImageLoader extends AsyncTask<ImageLoaderData, Void, ImageLoaderData[]> {
-		@Override
-		protected ImageLoaderData[] doInBackground(ImageLoaderData... images) {
-			for (ImageLoaderData image : images) {
-				Bitmap bmp = GalleryActivity.decodeSampledBitmapFromPath(
-						getApplicationContext(), image.getPath(), 100, 100);
-
-				image.mBmp = bmp;
-			}
-			return images;
-		}
-
-		@Override
-		protected void onPostExecute(ImageLoaderData[] images) {
-			for (final ImageLoaderData image : images) {
-				ImageView imageView = image.mImageView;
-				if (image.mBmp != null) {
-					image.mAdapter.mBitmaps[image.mPosition] = image.mBmp;
-					imageView.setImageBitmap(image.mBmp);
-					imageView.setOnClickListener(new OnClickListener() {
-						@Override
-						public void onClick(View v) {
-							viewImage((String) image.getPath());
-						}
-					});
-				} else {
-					imageView.setImageResource(android.R.drawable.ic_menu_help);
-				}
-			}
-		}
-	}
-
-	class ImageLoaderData {
-		public ImageView mImageView;
-		public GalleryAdapter mAdapter;
-		public int mPosition;
-		public Bitmap mBmp;
-		public ImageLoaderData(ImageView imageView, GalleryAdapter adapter, int position) {
-			mImageView = imageView;
-			mAdapter = adapter;
-			mPosition = position;
-		}
-		
-		public String getPath() {
-			return (String) mAdapter.getItem(mPosition);
-		}
-	}
 }
