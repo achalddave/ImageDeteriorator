@@ -1,6 +1,5 @@
 package com.example.basiccameraapp;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,13 +24,9 @@ import android.widget.ImageView;
 
 public class GalleryActivity extends Activity {
 	GridView gallery;
-	static String TAG;
+	static String TAG = GalleryActivity.class.getName();
 	static String PATH = "path";
 	int numCols = 5;
-
-	static {
-		TAG = GalleryActivity.class.getName();
-	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,76 +67,54 @@ public class GalleryActivity extends Activity {
 			// that are at least as large as the requested dimensions.
 			inSampleSize = Math.min(heightRatio, widthRatio);
 		}
-		Log.d(TAG, "inSampleSize: " + inSampleSize);
 		return inSampleSize;
 	}
 
-	public static Bitmap decodeSampledBitmapFromByteArray(byte[] data, int requestedHeight, int requestedWidth) {
+	/*
+	 * Returns a Bitmap decoded to fit requested dimensions.
+	 * 
+	 * This method decodes a Bitmap in a memory efficient way. Context needs to be
+	 * passed so `openFileInput` can be called (which allows us to access the app's
+	 * private files).
+	 */
+	public static Bitmap decodeSampledBitmapFromPath(Context context,
+			String path, int requestedHeight, int requestedWidth) {
 		// Decode with inJustDecodeBounds = true to check dimensions
 		final BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
-		BitmapFactory.decodeByteArray(data, 0, data.length, options);
-
-		options.inSampleSize = calculateInSampleSize(options, requestedHeight, requestedWidth);
-
-		options.inJustDecodeBounds = false;
-		return BitmapFactory.decodeByteArray(data, 0, data.length, options);
-	}
-
-	public static byte[] readBytesFromPath(Context mContext, String path) {
-		/*
-		 * TODO: Check which version of this is faster
-        byte[] byteArr = new byte[0];
-        byte[] buffer = new byte[1024];
-        int len;
-        int count = 0;
-
-        try {
-        	FileInputStream is = openFileInput(path);
-        	while ((len = is.read(buffer)) > -1) {
-        		if (len != 0) {
-        			// if we're going to go out of byteArray bounds
-        			if (count + len > byteArr.length) {
-        				// make byteArray bigger
-        				byte[] newbuf = new byte[(count + len)*2];
-        				System.arraycopy(byteArr, 0, newbuf, 0, count);
-        				byteArr = newbuf;
-        			}
-
-        			// "append" to byteArray
-        			System.arraycopy(buffer, 0, byteArr, count, len);
-        			count += len;
-        		}
-        	}
-        	is.close();
-        } catch (FileNotFoundException e) {
-        	Log.e(TAG, "Couldn't find file " + path);
-        	e.printStackTrace();
-        } catch (IOException e) {
-        	Log.e(TAG, "Couldn't read from file " + path + " properly...");
-			e.printStackTrace();
-		}
-        return byteArr;
+		/* 
+		 * Have to open two input streams, because you can only read from a stream
+		 * once (there are ways to sidestep this, but I couldn't get them working).
+		 * 
+		 * Note that reading a byte array from the file and then using it does not work, 
+		 * as we run out of memory.
 		 */
-
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		int i;
-		byte[] buffer = new byte[1024];
+		FileInputStream fis;
 		try {
-			FileInputStream is = mContext.openFileInput(path);
-			while ((i = is.read(buffer)) != -1) {
-				bos.write(buffer);
-			}
-			is.close();
-			return bos.toByteArray();
+			fis = context.openFileInput(path);
+			BitmapFactory.decodeStream(fis, null, options);
+			fis.close();
 		} catch (FileNotFoundException e) {
-			Log.e(TAG, "Couldn't find file " + path);
-			e.printStackTrace();
+			Log.e(TAG, "Couldn't find file: " + path, e);
 		} catch (IOException e) {
-			Log.e(TAG, "Couldn't close file " + path);
-			e.printStackTrace();
+			Log.e(TAG, "Couldn't close filestream for file: " + path, e);
 		}
-		return null;
+
+		/* now actually decode the file with the necessary dimensions */
+		options.inSampleSize = calculateInSampleSize(options, requestedHeight,
+				requestedWidth);
+		options.inJustDecodeBounds = false;
+		Bitmap b = null;
+		try {
+			fis = context.openFileInput(path);
+			b = BitmapFactory.decodeStream(fis, null, options);
+			fis.close();
+		} catch (FileNotFoundException e) {
+			Log.e(TAG, "Couldn't find file: " + path, e);
+		} catch (IOException e) {
+			Log.e(TAG, "Couldn't close filestream for file: " + path, e);
+		}
+		return b;
 	}
 
 	private void viewImage(String path) {
@@ -153,10 +126,12 @@ public class GalleryActivity extends Activity {
 	class GalleryAdapter extends BaseAdapter {
 		Context mContext;
 		String[] mImagePaths;
+		Bitmap[] mBitmaps;
 
 		public GalleryAdapter(Context context, String[] imagePaths) {
 			mContext = context;
 			mImagePaths = imagePaths;
+			mBitmaps = new Bitmap[imagePaths.length];
 		}
 
 		@Override
@@ -184,9 +159,13 @@ public class GalleryActivity extends Activity {
 				imageView = (ImageView) convertView;
 			}
 
-			imageView.setImageResource(android.R.drawable.ic_menu_help);
-			ImageViewData img = new ImageViewData(imageView, (String) getItem(position));
-			new ImageLoader().execute(img);
+			if (mBitmaps[position] == null) {
+				imageView.setImageResource(android.R.drawable.ic_menu_help);
+				ImageLoaderData img = new ImageLoaderData(imageView, this, position);
+				new ImageLoader().execute(img);
+			} else {
+				imageView.setImageBitmap(mBitmaps[position]);
+			}
 
 			return imageView;
 		}
@@ -198,29 +177,29 @@ public class GalleryActivity extends Activity {
 
 	}
 
-	class ImageLoader extends AsyncTask<ImageViewData, Void, ImageViewData[]> {
-
+	class ImageLoader extends AsyncTask<ImageLoaderData, Void, ImageLoaderData[]> {
 		@Override
-		protected ImageViewData[] doInBackground(ImageViewData... images) {
-			for (ImageViewData image : images) {
-				byte[] data = GalleryActivity.readBytesFromPath(GalleryActivity.this, image.path);
-				Bitmap bmp = GalleryActivity.decodeSampledBitmapFromByteArray(data, 100, 100);
+		protected ImageLoaderData[] doInBackground(ImageLoaderData... images) {
+			for (ImageLoaderData image : images) {
+				Bitmap bmp = GalleryActivity.decodeSampledBitmapFromPath(
+						getApplicationContext(), image.getPath(), 100, 100);
 
-				image.bmp = bmp;
+				image.mBmp = bmp;
 			}
 			return images;
 		}
 
 		@Override
-		protected void onPostExecute(ImageViewData[] images) {
-			for (final ImageViewData image : images) {
-				ImageView imageView = image.imageView;
-				if (image.bmp != null) {
-					imageView.setImageBitmap(image.bmp);
+		protected void onPostExecute(ImageLoaderData[] images) {
+			for (final ImageLoaderData image : images) {
+				ImageView imageView = image.mImageView;
+				if (image.mBmp != null) {
+					image.mAdapter.mBitmaps[image.mPosition] = image.mBmp;
+					imageView.setImageBitmap(image.mBmp);
 					imageView.setOnClickListener(new OnClickListener() {
 						@Override
 						public void onClick(View v) {
-							viewImage(image.path);
+							viewImage((String) image.getPath());
 						}
 					});
 				} else {
@@ -228,16 +207,21 @@ public class GalleryActivity extends Activity {
 				}
 			}
 		}
-
 	}
 
-	class ImageViewData {
-		public ImageView imageView;
-		public String path;
-		public Bitmap bmp;
-		public ImageViewData(ImageView imageView, String path) {
-			this.imageView = imageView;
-			this.path = path;
+	class ImageLoaderData {
+		public ImageView mImageView;
+		public GalleryAdapter mAdapter;
+		public int mPosition;
+		public Bitmap mBmp;
+		public ImageLoaderData(ImageView imageView, GalleryAdapter adapter, int position) {
+			mImageView = imageView;
+			mAdapter = adapter;
+			mPosition = position;
+		}
+		
+		public String getPath() {
+			return (String) mAdapter.getItem(mPosition);
 		}
 	}
 }

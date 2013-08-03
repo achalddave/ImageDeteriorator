@@ -13,8 +13,8 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 public class ImageViewerActivity extends Activity {
 	ImageView currentImage;
 	SeekBar artifactSlider;
-	byte[] mBitmapData;
 	Bitmap mBitmap;
+	String mPath;
 	ArtifactInducer artifactInducer;
 	static String TAG = ImageViewerActivity.class.getName();
 
@@ -28,8 +28,7 @@ public class ImageViewerActivity extends Activity {
 		artifactInducer = new BlurArtifactInducer();
 
 		Intent intent = getIntent();
-		String path = intent.getStringExtra(GalleryActivity.PATH);
-		mBitmapData = GalleryActivity.readBytesFromPath(this, path);
+		mPath = intent.getStringExtra(GalleryActivity.PATH);
 
 		artifactSlider.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 
@@ -52,7 +51,9 @@ public class ImageViewerActivity extends Activity {
 	public void onWindowFocusChanged(boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
 		if (mBitmap == null) {
-			mBitmap = GalleryActivity.decodeSampledBitmapFromByteArray(mBitmapData, currentImage.getHeight(), currentImage.getWidth());
+			mBitmap = GalleryActivity.decodeSampledBitmapFromPath(
+					getApplicationContext(), mPath, currentImage.getHeight(),
+					currentImage.getWidth());
 			updateImage();
 		}
 	}
