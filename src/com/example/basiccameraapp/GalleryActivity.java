@@ -91,7 +91,8 @@ public class GalleryActivity extends Activity {
 		options.inJustDecodeBounds = true;
 		/* 
 		 * Have to open two input streams, because you can only read from a stream
-		 * once (there are ways to sidestep this, but I couldn't get them working).
+		 * once (there are ways to sidestep this (calling reset on the stream), but I
+		 * couldn't get them working, and I'm not convinced they'd be better).
 		 * 
 		 * Note that reading a byte array from the file and then using it does not work, 
 		 * as we run out of memory.
