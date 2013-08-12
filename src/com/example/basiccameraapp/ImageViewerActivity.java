@@ -13,7 +13,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 public class ImageViewerActivity extends Activity {
 	static String TAG = ImageViewerActivity.class.getName();
 	ImageView mCurrentImage;
-	SeekBar mAtifactSlider;
+	SeekBar mArtifactSlider;
 	Bitmap mBitmap;
 	String mPath;
 	ArtifactInducer mArtifactInducer;
@@ -25,7 +25,7 @@ public class ImageViewerActivity extends Activity {
 		setContentView(R.layout.activity_image_viewer);
 
 		mCurrentImage = (ImageView) findViewById(R.id.currentImage);
-		mAtifactSlider = (SeekBar) findViewById(R.id.artifactSlider);
+		mArtifactSlider = (SeekBar) findViewById(R.id.artifactSlider);
 		mArtifactInducer = new BlurArtifactInducer();
 
 		mCurrentImage.setOnClickListener(new View.OnClickListener() {
@@ -38,7 +38,7 @@ public class ImageViewerActivity extends Activity {
 		Intent intent = getIntent();
 		mPath = intent.getStringExtra(GalleryActivity.INTENT_KEY_PATH);
 
-		mAtifactSlider.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+		mArtifactSlider.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 
 			@Override
 			public void onProgressChanged(SeekBar slider, int progress, boolean fromUser) {
