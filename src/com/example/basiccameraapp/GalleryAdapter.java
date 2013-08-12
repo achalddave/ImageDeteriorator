@@ -3,11 +3,10 @@ package com.example.basiccameraapp;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -19,12 +18,28 @@ public class GalleryAdapter extends BaseAdapter {
 	ImageCache mImageCache;
 	Context mContext;
 	String[] mImagePaths;
+	View.OnClickListener mImageViewListener;
 	BasicCameraApplication mApp;
+	GridView mGallery;
 
-	public GalleryAdapter(Context context, String[] imagePaths, ImageCache imageCache) {
+	public GalleryAdapter(Context context, GridView gallery, String[] imagePaths, ImageCache imageCache) {
 		mContext = context;
+		mGallery = gallery;
 		mImagePaths = imagePaths;
 		mImageCache = imageCache;
+		mGallery.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> gallery, View view, int pos,
+					long id) {
+				String path = (String) view.getTag();
+				if (path != null) {
+					Log.i(TAG, "Opening image: " + path);
+					GalleryActivity.viewImage(GalleryAdapter.this.mContext, path);
+				} else {
+					Log.e(TAG, "No path associated with image at position " + pos + "!");
+				}
+			}
+		});
 	}
 
 	@Override
@@ -34,9 +49,8 @@ public class GalleryAdapter extends BaseAdapter {
 
 	@Override
 	public long getItemId(int position) {
-		// not used
-		Log.d(TAG, "Called getItemId on position " + position
-				+ "; this shouldn't happen...");
+		// Android calls this when an item is clicked so an id can be passed
+		// to onItemClickListener. But we ignore the id currently.
 		return -1;
 	}
 
@@ -52,12 +66,14 @@ public class GalleryAdapter extends BaseAdapter {
 			imageView = (ImageView) convertView;
 		}
 
-		Bitmap cached = mImageCache.get((String) getItem(position));
+		String path = (String) getItem(position);
+		Bitmap cached = mImageCache.get(path);
 		if (cached == null) {
 			imageView.setImageResource(android.R.drawable.ic_menu_help);
 			ImageLoaderData img = new ImageLoaderData(imageView, this, position);
 			new ImageLoader().execute(img);
 		} else {
+			imageView.setTag(path);
 			imageView.setImageBitmap(cached);
 		}
 
@@ -69,53 +85,48 @@ public class GalleryAdapter extends BaseAdapter {
 		return mImagePaths.length;
 	}
 
-}
+	class ImageLoader extends AsyncTask<ImageLoaderData, Void, ImageLoaderData[]> {
+		@Override
+		protected ImageLoaderData[] doInBackground(ImageLoaderData... images) {
+			for (ImageLoaderData image : images) {
+				Bitmap bmp = GalleryActivity.decodeSampledBitmapFromPath(
+						image.mAdapter.mContext, image.getPath(), 100, 100);
 
-class ImageLoader extends AsyncTask<ImageLoaderData, Void, ImageLoaderData[]> {
-	@Override
-	protected ImageLoaderData[] doInBackground(ImageLoaderData... images) {
-		for (ImageLoaderData image : images) {
-			Bitmap bmp = GalleryActivity.decodeSampledBitmapFromPath(
-					image.mAdapter.mContext, image.getPath(), 100, 100);
-
-			image.mBmp = bmp;
+				image.mBmp = bmp;
+			}
+			return images;
 		}
-		return images;
-	}
 
-	@Override
-	protected void onPostExecute(ImageLoaderData[] images) {
-		for (final ImageLoaderData image : images) {
-			ImageView imageView = image.mImageView;
-			final String path = image.getPath();
-			if (image.mBmp != null) {
-				image.mAdapter.mImageCache.put(path, image.mBmp);
-				imageView.setImageBitmap(image.mBmp);
-				imageView.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						GalleryActivity.viewImage(image.mAdapter.mContext, path);
-					}
-				});
-			} else {
-				imageView.setImageResource(android.R.drawable.ic_menu_help);
+		@Override
+		protected void onPostExecute(ImageLoaderData[] images) {
+			for (final ImageLoaderData image : images) {
+				ImageView imageView = image.mImageView;
+				final String path = image.getPath();
+				if (image.mBmp != null) {
+					image.mAdapter.mImageCache.put(path, image.mBmp);
+					imageView.setImageBitmap(image.mBmp);
+					imageView.setTag(path);
+				} else {
+					imageView.setImageResource(android.R.drawable.ic_menu_help);
+				}
 			}
 		}
 	}
+
+	class ImageLoaderData {
+		public ImageView mImageView;
+		public GalleryAdapter mAdapter;
+		public int mPosition;
+		public Bitmap mBmp;
+		public ImageLoaderData(ImageView imageView, GalleryAdapter adapter, int position) {
+			mImageView = imageView;
+			mAdapter = adapter;
+			mPosition = position;
+		}
+
+		public String getPath() {
+			return (String) mAdapter.getItem(mPosition);
+		}
+	}
 }
 
-class ImageLoaderData {
-	public ImageView mImageView;
-	public GalleryAdapter mAdapter;
-	public int mPosition;
-	public Bitmap mBmp;
-	public ImageLoaderData(ImageView imageView, GalleryAdapter adapter, int position) {
-		mImageView = imageView;
-		mAdapter = adapter;
-		mPosition = position;
-	}
-
-	public String getPath() {
-		return (String) mAdapter.getItem(mPosition);
-	}
-}

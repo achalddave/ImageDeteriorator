@@ -36,7 +36,7 @@ public class GalleryActivity extends Activity {
 
 		String[] imagePaths = getApplicationContext().fileList();
 		mGallery = (GridView) findViewById(R.id.gallery);
-		mGallery.setAdapter(new GalleryAdapter(this, imagePaths, mApp.mImageCache));
+		mGallery.setAdapter(new GalleryAdapter(this, mGallery, imagePaths, mApp.mImageCache));
 	}
 
 	@Override
