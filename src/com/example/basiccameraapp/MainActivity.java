@@ -76,7 +76,6 @@ public class MainActivity extends Activity {
 		this.addContentView(cameraOverlay, cameraOverlayParams);
 
 		mGalleryOpener = (Button) findViewById(R.id.galleryOpener);
-		mCameraSwitcher = (Button) findViewById(R.id.cameraSwitcher);
 	}
 
 	@Override
