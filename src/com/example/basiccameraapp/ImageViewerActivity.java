@@ -21,11 +21,19 @@ public class ImageViewerActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		setContentView(R.layout.activity_image_viewer);
 
 		mCurrentImage = (ImageView) findViewById(R.id.currentImage);
 		mAtifactSlider = (SeekBar) findViewById(R.id.artifactSlider);
 		mArtifactInducer = new BlurArtifactInducer();
+		
+		mCurrentImage.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				ImageViewerActivity.this.finish();
+			}
+		});
 
 		Intent intent = getIntent();
 		mPath = intent.getStringExtra(GalleryActivity.INTENT_KEY_PATH);

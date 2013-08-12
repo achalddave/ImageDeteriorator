@@ -120,4 +120,7 @@ public class GalleryActivity extends Activity {
 		context.startActivity(intent);
 	}
 
+	public void openCamera(View sender) {
+		this.finish();
+	}
 }
