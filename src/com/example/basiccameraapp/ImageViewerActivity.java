@@ -27,7 +27,7 @@ public class ImageViewerActivity extends Activity {
 		mCurrentImage = (ImageView) findViewById(R.id.currentImage);
 		mAtifactSlider = (SeekBar) findViewById(R.id.artifactSlider);
 		mArtifactInducer = new BlurArtifactInducer();
-		
+
 		mCurrentImage.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -46,7 +46,7 @@ public class ImageViewerActivity extends Activity {
 			}
 
 			@Override
-			public void onStartTrackingTouch(SeekBar slider) { } 
+			public void onStartTrackingTouch(SeekBar slider) { }
 			@Override
 			public void onStopTrackingTouch(SeekBar slider) { }
 		});
