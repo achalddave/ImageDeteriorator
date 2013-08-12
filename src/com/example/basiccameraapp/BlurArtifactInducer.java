@@ -1,7 +1,6 @@
 package com.example.basiccameraapp;
 
 import android.graphics.Bitmap;
-import android.util.Log;
 
 public class BlurArtifactInducer extends ArtifactInducer {
 	private static String TAG = BlurArtifactInducer.class.getName();

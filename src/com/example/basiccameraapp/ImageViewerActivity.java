@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -46,12 +46,9 @@ public class ImageViewerActivity extends Activity {
 			}
 
 			@Override
-			public void onStartTrackingTouch(SeekBar slider) {
-			}
-
+			public void onStartTrackingTouch(SeekBar slider) { } 
 			@Override
-			public void onStopTrackingTouch(SeekBar slider) {
-			}
+			public void onStopTrackingTouch(SeekBar slider) { }
 		});
 	}
 
