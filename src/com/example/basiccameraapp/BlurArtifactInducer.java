@@ -7,17 +7,32 @@ public class BlurArtifactInducer extends ArtifactInducer {
 	private static String TAG = BlurArtifactInducer.class.getName();
 
 	@Override
-	public Bitmap induceArtifacts(Bitmap image, float artifactIntensity) {
-		//			  offset	     map artifactIntensity to be bwn 0.8, 1
-		float scale = 1.001f - (artifactIntensity*0.2f + 0.8f);
-		int scaledHeight = (int) (image.getHeight() * scale);
+	public Bitmap induceArtifacts(Bitmap image, int originalWidth, int originalHeight, float artifactIntensity) {
+		if (Float.compare(0, artifactIntensity) == 0) {
+			return image;
+		}
+
+		// The blur-by-scaling method we use makes it so that the difference between
+		// a scale of 0.9 and 1 is far more visible than the difference between 0 and
+		// 0.1. This function attempts to scale the artifact intensity such that
+		// callers of induceArtifacts see a linear-like drop off in quality (relative
+		// to artifactIntensity).
+		float scale = (float) (1 - Math.pow(Math.log(artifactIntensity+1)/Math.log(2),1.0/35.0d));
+
+		int proportionateWidth = originalWidth;
+		int proportionateHeight = (int) (originalWidth * ((float) image.getHeight() / image.getWidth()));
+		if (proportionateHeight > originalHeight) {
+			proportionateHeight = originalHeight;
+			proportionateWidth = (int) (originalHeight * ((float) image.getWidth() / image.getHeight()));
+		}
+
+		int scaledHeight = (int) (proportionateHeight * scale);
 		scaledHeight = scaledHeight == 0 ? 1 : scaledHeight;
-		int scaledWidth = (int) (image.getWidth() * scale);
+		int scaledWidth = (int) (proportionateWidth * scale);
 		scaledWidth = scaledWidth == 0 ? 1 : scaledWidth;
-		Log.d(TAG, "H: " + image.getHeight() + ", W: " + image.getWidth());
-		Log.d(TAG, "Scaled H: " + scaledHeight + ", W: " + scaledWidth);
+
 		return Bitmap.createScaledBitmap(
 				Bitmap.createScaledBitmap(image, scaledHeight, scaledWidth, true),
-				image.getWidth(), image.getHeight(), true);
+				proportionateWidth, proportionateHeight, true);
 	}
 }

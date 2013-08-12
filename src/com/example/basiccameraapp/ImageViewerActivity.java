@@ -54,7 +54,7 @@ public class ImageViewerActivity extends Activity {
 			mBitmap = GalleryActivity.decodeSampledBitmapFromPath(
 					getApplicationContext(), mPath, mCurrentImage.getHeight(),
 					mCurrentImage.getWidth());
-			updateImage();
+			induceArtifacts(0);
 		}
 	}
 
@@ -66,8 +66,7 @@ public class ImageViewerActivity extends Activity {
 	}
 
 	private void induceArtifacts(float intensity) {
-		Log.d(TAG, "Intensity: " + intensity);
-		updateImage(mArtifactInducer.induceArtifacts(mBitmap, intensity));
+		updateImage(mArtifactInducer.induceArtifacts(mBitmap, mCurrentImage.getWidth(), mCurrentImage.getHeight(), intensity));
 	}
 
 	private void updateImage() {
