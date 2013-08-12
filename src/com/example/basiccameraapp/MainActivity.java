@@ -9,8 +9,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import com.example.basiccameraapp.application.BasicCameraApplication;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -30,8 +28,6 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
@@ -48,13 +44,6 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		// Full screen!
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		// setContentView(R.layout.activity_main);
-		
-		BasicCameraApplication app = (BasicCameraApplication) getApplication();
-
 		mPreview = new Preview(this);
 		setContentView(mPreview);
 		mPreview.setOnClickListener(new OnClickListener() {
@@ -64,7 +53,6 @@ public class MainActivity extends Activity {
 					@Override
 					public void onPictureTaken(byte[] data, Camera camera) {
 						new WritePhotoTask().execute(data);
-						// Log.d(TAG, "Wrote file, starting preview again.");
 						new Handler().postDelayed(new Runnable() {
 							@Override
 							public void run() {
@@ -104,7 +92,6 @@ public class MainActivity extends Activity {
 	}
 
 	void setupCameraAndPreview() {
-		// Log.d(TAG, "Opening camera " + currentCameraId);
 		mCamera = Camera.open(mCurrentCameraId);
 		mPreview.setCamera(mCamera);
 	}
@@ -129,13 +116,8 @@ public class MainActivity extends Activity {
 		startActivity(intent);
 	}
 
-	public void switchCamera(View sender) {
-		// Log.d(TAG,
-				// "Switching camera! (not really this is just a debug message, debug messages can't switch cameras stupid.");
-	}
-
 	class Preview extends ViewGroup implements SurfaceHolder.Callback {
-		private final String TAG = "Preview";
+		private final String TAG = Preview.class.getName();
 
 		SurfaceView mSurfaceView;
 		SurfaceHolder mHolder;
@@ -143,6 +125,7 @@ public class MainActivity extends Activity {
 		List<Size> mSupportedPreviewSizes;
 		Camera mCamera;
 
+		@SuppressWarnings("deprecation")
 		Preview(Context context) {
 			super(context);
 
@@ -198,7 +181,6 @@ public class MainActivity extends Activity {
 				cameraOrientationOffset = 360 - cameraOrientationOffset;
 			}
 			int result = ((cameraOrientationOffset - degrees + 360) % 360);
-			// Log.d(TAG, "Orientation required: " + result);
 			return result;
 		}
 
@@ -229,12 +211,9 @@ public class MainActivity extends Activity {
 			setMeasuredDimension(width, height);
 
 			if (mSupportedPreviewSizes != null) {
-				// Log.d(TAG, "OnMeasure: Width: " + width + "; height: " + height);
 				mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes,
 						width, height);
 			}
-			// Log.d(TAG, "mPreviewSize: W: " + mPreviewSize.width + "; H: "
-					// + mPreviewSize.height);
 		}
 
 		@Override
@@ -252,23 +231,15 @@ public class MainActivity extends Activity {
 					previewHeight = mPreviewSize.height;
 				}
 
-				// Log.d(TAG, "Width: " + width + "; height: " + height);
-				// Log.d(TAG, "PW: " + previewWidth + "; PH: " + previewHeight);
 				// Center the child SurfaceView within the parent.
 				if (width * previewHeight > height * previewWidth) {
 					final int scaledChildWidth = previewWidth * height
 							/ previewHeight;
-					// Log.d(TAG, "W-sCW: " + (width - scaledChildWidth)
-							// + "; W+sCW: " + (width + scaledChildWidth)
-							// + "; height: " + height);
 					child.layout((width - scaledChildWidth) / 2, 0,
 							(width + scaledChildWidth) / 2, height);
 				} else {
 					final int scaledChildHeight = previewHeight * width
 							/ previewWidth;
-					// Log.d(TAG, "H-sCH: " + (height - scaledChildHeight)
-							// + "; H+sCH: " + (height + scaledChildHeight)
-							// + "; width: " + width);
 					child.layout(0, (height - scaledChildHeight) / 2, width,
 							(height + scaledChildHeight) / 2);
 				}
@@ -360,7 +331,7 @@ public class MainActivity extends Activity {
 		// get internal storage directory;
 		return new File(getApplicationContext().getFilesDir(), fileName);
 	}
-	
+
 	class WritePhotoTask extends AsyncTask<byte[], Object, Object> {
 		@Override
 		protected String doInBackground(byte[]... photos) {
