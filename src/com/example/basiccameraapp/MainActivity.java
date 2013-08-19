@@ -12,6 +12,7 @@ import java.util.Locale;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
@@ -22,6 +23,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -31,14 +33,23 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
+import com.example.basiccameraapp.application.BasicCameraApplication;
+
 public class MainActivity extends Activity {
 	static String TAG = MainActivity.class.getName();
+	static String DEFAULT_PREFS_NAME = BasicCameraApplication.class.getName();
+	static String PREFS_KEY_SCREEN_HEIGHT = "screenHeight";
+	static String PREFS_KEY_SCREEN_WIDTH = "screenWidth";
+	static int sTimeToImageDeath = 3600000;
+
 	Camera mCamera;
 	Preview mPreview;
 	int mCurrentCameraId;
 	Button mGalleryOpener;
 	Button mCameraSwitcher;
 	PictureCallback mPictureCallback;
+
+	SharedPreferences mPrefs;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +87,7 @@ public class MainActivity extends Activity {
 		this.addContentView(cameraOverlay, cameraOverlayParams);
 
 		mGalleryOpener = (Button) findViewById(R.id.galleryOpener);
+		mPrefs = getSharedPreferences(MainActivity.DEFAULT_PREFS_NAME, MODE_PRIVATE);
 	}
 
 	@Override
