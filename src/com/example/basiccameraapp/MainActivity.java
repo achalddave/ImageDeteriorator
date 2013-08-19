@@ -67,7 +67,7 @@ public class MainActivity extends Activity {
 						new Handler().postDelayed(new Runnable() {
 							@Override
 							public void run() {
-								mCamera.startPreview();
+								if (mCamera != null) mCamera.startPreview();
 							}
 						}, 100);
 					}
