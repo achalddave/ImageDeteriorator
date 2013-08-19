@@ -14,13 +14,4 @@
         android:layout_alignParentTop="true" 
         />
 
-    <SeekBar
-        android:id="@+id/artifactSlider"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:max="100"
-        android:progress="0" />
-
 </RelativeLayout>
