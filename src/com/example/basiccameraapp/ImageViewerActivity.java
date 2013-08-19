@@ -1,22 +1,27 @@
 package com.example.basiccameraapp;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.SeekBar;
-import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class ImageViewerActivity extends Activity {
 	static String TAG = ImageViewerActivity.class.getName();
+	static int refreshRate = 300;
 	ImageView mCurrentImage;
-	SeekBar mArtifactSlider;
 	Bitmap mBitmap;
 	String mPath;
 	ArtifactInducer mArtifactInducer;
+	SharedPreferences mPrefs;
+	int mTimeViewed;
+	Timer mImageUpdateTimer;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -24,8 +29,9 @@ public class ImageViewerActivity extends Activity {
 
 		setContentView(R.layout.activity_image_viewer);
 
+		mPrefs = getSharedPreferences(MainActivity.DEFAULT_PREFS_NAME, MODE_PRIVATE);
+
 		mCurrentImage = (ImageView) findViewById(R.id.currentImage);
-		mArtifactSlider = (SeekBar) findViewById(R.id.artifactSlider);
 		mArtifactInducer = new BlurArtifactInducer();
 
 		mCurrentImage.setOnClickListener(new View.OnClickListener() {
@@ -37,19 +43,6 @@ public class ImageViewerActivity extends Activity {
 
 		Intent intent = getIntent();
 		mPath = intent.getStringExtra(GalleryActivity.INTENT_KEY_PATH);
-
-		mArtifactSlider.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-
-			@Override
-			public void onProgressChanged(SeekBar slider, int progress, boolean fromUser) {
-				induceArtifacts((float) progress / (float) slider.getMax());
-			}
-
-			@Override
-			public void onStartTrackingTouch(SeekBar slider) { }
-			@Override
-			public void onStopTrackingTouch(SeekBar slider) { }
-		});
 	}
 
 	@Override
@@ -59,8 +52,35 @@ public class ImageViewerActivity extends Activity {
 			mBitmap = GalleryActivity.decodeSampledBitmapFromPath(
 					getApplicationContext(), mPath, mCurrentImage.getHeight(),
 					mCurrentImage.getWidth());
-			induceArtifacts(0);
+			induceArtifacts();
 		}
+	}
+
+	@Override
+	public void onResume() {
+		mTimeViewed = mPrefs.getInt(mPath, 0);
+		mImageUpdateTimer = new Timer();
+		mImageUpdateTimer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				if (mBitmap != null) {
+					mTimeViewed = Math.min(mTimeViewed + refreshRate, MainActivity.sTimeToImageDeath);
+					ImageViewerActivity.this.runOnUiThread(new Runnable() {
+						public void run() {
+							induceArtifacts();
+						}
+					});
+				}
+			}
+		}, 0, refreshRate);
+		super.onResume();
+	}
+
+	@Override
+	public void onStop() {
+		mImageUpdateTimer.cancel();
+		mPrefs.edit().putInt(mPath, mTimeViewed).commit();
+		super.onStop();
 	}
 
 	@Override
@@ -70,13 +90,17 @@ public class ImageViewerActivity extends Activity {
 		return true;
 	}
 
-	private void induceArtifacts(float intensity) {
-		updateImage(mArtifactInducer.induceArtifacts(mBitmap, mCurrentImage.getWidth(), mCurrentImage.getHeight(), intensity));
+	private void induceArtifacts() {
+		updateImage(mArtifactInducer.induceArtifacts(mBitmap,
+				mCurrentImage.getWidth(), mCurrentImage.getHeight(),
+				(float) mTimeViewed / MainActivity.sTimeToImageDeath));
 	}
 
+	/*
 	private void updateImage() {
 		updateImage(mBitmap);
 	}
+	*/
 
 	private void updateImage(Bitmap bmp) {
 		mCurrentImage.setImageBitmap(bmp);
