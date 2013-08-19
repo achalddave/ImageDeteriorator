@@ -1,6 +1,7 @@
 package com.example.basiccameraapp;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 public class BlurArtifactInducer extends ArtifactInducer {
 	private static String TAG = BlurArtifactInducer.class.getName();
@@ -29,9 +30,22 @@ public class BlurArtifactInducer extends ArtifactInducer {
 		scaledHeight = scaledHeight == 0 ? 1 : scaledHeight;
 		int scaledWidth = (int) (proportionateWidth * scale);
 		scaledWidth = scaledWidth == 0 ? 1 : scaledWidth;
+		
+		if (scaledWidth > image.getWidth() && scaledHeight > image.getHeight()) {
+			return image;
+		}
 
-		return Bitmap.createScaledBitmap(
-				Bitmap.createScaledBitmap(image, scaledHeight, scaledWidth, true),
-				proportionateWidth, proportionateHeight, true);
+		Log.i(TAG, "Scaled width: " + scaledWidth + "; height: " + scaledHeight);
+		Log.i(TAG, "Image  width: " + image.getWidth() + "; height: " + image.getHeight());
+		Log.i(TAG, "Proportionate width: " + image.getWidth() + "; height: " + image.getHeight());
+		if (proportionateHeight < image.getHeight() && proportionateWidth < image.getWidth()) {
+			return Bitmap.createScaledBitmap(
+					Bitmap.createScaledBitmap(image, scaledHeight, scaledWidth, true),
+					proportionateWidth, proportionateHeight, true);
+		} else {
+			return Bitmap.createScaledBitmap(
+					Bitmap.createScaledBitmap(image, scaledHeight, scaledWidth, true),
+					image.getWidth(), image.getHeight(), true);
+		}
 	}
 }
