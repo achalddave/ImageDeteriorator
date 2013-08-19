@@ -156,7 +156,13 @@ public class GalleryAdapter extends BaseAdapter {
 				loader.execute(path);
 				mImageLoadersByPath.put(path, loader);
 			}
+			if (imageView.getAnimation() == null) {
+				Animation rotation = AnimationUtils.loadAnimation(mActivity, R.anim.loading);
+				imageView.setImageResource(R.drawable.loading_circle);
+				imageView.startAnimation(rotation);
+			}
 		} else {
+			imageView.clearAnimation();
 			setArtifactInducedBitmap(imageView, cached);
 		}
 
