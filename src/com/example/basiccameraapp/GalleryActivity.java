@@ -5,13 +5,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.GridView;
 
@@ -19,9 +22,11 @@ import com.example.basiccameraapp.application.BasicCameraApplication;
 
 public class GalleryActivity extends Activity {
 	static String TAG = GalleryActivity.class.getName();
-	GridView mGallery;
 	static String INTENT_KEY_PATH = "path";
+
 	BasicCameraApplication mApp;
+	GridView mGallery;
+	GalleryAdapter mGalleryAdapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +40,20 @@ public class GalleryActivity extends Activity {
 
 		String[] imagePaths = getApplicationContext().fileList();
 		mGallery = (GridView) findViewById(R.id.gallery);
-		mGallery.setAdapter(new GalleryAdapter(this, mGallery, imagePaths, mApp.mImageCache));
+		mGalleryAdapter = new GalleryAdapter(this, mGallery, imagePaths, mApp.mImageCache);
+		mGallery.setAdapter(mGalleryAdapter);
+	}
+
+	@Override
+	public void onResume() {
+		mGalleryAdapter.startRefresh();
+		super.onResume();
+	}
+	
+	@Override
+	public void onStop() {
+		mGalleryAdapter.stopRefresh();
+		super.onStop();
 	}
 
 	@Override
@@ -43,6 +61,20 @@ public class GalleryActivity extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.gallery, menu);
 		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.reset_times:
+			resetImageViewTimes();
+			return true;
+		case R.id.clear_images:
+			deleteAfterConfirmation();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
 
 	private static int calculateInSampleSize(BitmapFactory.Options options,
@@ -117,6 +149,40 @@ public class GalleryActivity extends Activity {
 		Intent intent = new Intent(context, ImageViewerActivity.class);
 		intent.putExtra(INTENT_KEY_PATH, path);
 		context.startActivity(intent);
+	}
+
+	private void updateAdapterPaths() {
+		String[] imagePaths = getApplicationContext().fileList();
+		mGalleryAdapter.mImagePaths = imagePaths;
+	}
+
+	public void resetImageViewTimes() {
+		mGalleryAdapter.mPrefs.edit().clear().commit();
+		mGalleryAdapter.populateImageViewTimesCache();
+		mGalleryAdapter.notifyDataSetChanged();
+	}
+	
+	private void deleteAfterConfirmation() {
+		new AlertDialog.Builder(this)
+			.setIcon(android.R.drawable.ic_dialog_alert)
+			.setTitle("Delete images?")
+			.setMessage("Are you sure you want to delete all saved images? This action *cannot* be undone!")
+			.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					deleteImages();
+				}
+			})
+			.setNegativeButton("No", null)
+			.show();
+	}
+	
+	private void deleteImages() {
+		for (String path : getApplicationContext().fileList()) {
+			deleteFile(path);
+		}
+		updateAdapterPaths();
+		mGalleryAdapter.notifyDataSetChanged();
 	}
 
 	public void openCamera(View sender) {

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">BasicCameraApp</string>
-    <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="reset_times">Reset</string><string name="app_name">BasicCameraApp</string>
+       <string name="hello_world">Hello world!</string>
     <string name="title_activity_gallery">Gallery</string>
     <string name="title_activity_image_viewer">ImageViewerActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="clear_images">Delete Images</string>
 
 </resources>
