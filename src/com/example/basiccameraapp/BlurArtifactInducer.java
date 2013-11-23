@@ -12,11 +12,13 @@ public class BlurArtifactInducer extends ArtifactInducer {
 			return image;
 		}
 
-		// The blur-by-scaling method we use makes it so that the difference between
-		// a scale of 0.9 and 1 is far more visible than the difference between 0 and
-		// 0.1. This function attempts to scale the artifact intensity such that
-		// callers of induceArtifacts see a linear-like drop off in quality (relative
-		// to artifactIntensity).
+		/* The blur-by-scaling method we use makes it so that the difference between
+		 * a scale of 0.9 and 1 is far more visible than the difference between 0 and
+		 * 0.1. This function attempts to scale the artifact intensity such that
+		 * callers of induceArtifacts see a linear-like drop off in quality (relative
+		 * to artifactIntensity). This function is a hack primarily driven by experiment
+		 * and does not have much theory behind it.
+		 */
 		float scale = (float) (1 - Math.pow(Math.log(artifactIntensity+1)/Math.log(2),1.0/35.0d));
 
 		int proportionateWidth = originalWidth;
