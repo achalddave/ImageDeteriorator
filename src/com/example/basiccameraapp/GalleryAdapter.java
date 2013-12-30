@@ -1,9 +1,7 @@
 package com.example.basiccameraapp;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,6 +10,7 @@ import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -33,7 +32,7 @@ public class GalleryAdapter extends BaseAdapter {
 	SharedPreferences mPrefs;
 
 	GridView mGallery;
-	ImageCache mImageCache;
+	ImageCache mImageCache; // Cache artifact induced images
 	String[] mImagePaths;
 	View.OnClickListener mImageViewListener;
 	HashMap<String, ImageLoader> mImageLoadersByPath;
@@ -80,46 +79,18 @@ public class GalleryAdapter extends BaseAdapter {
 
 	public void startRefresh() {
 		populateImageViewTimesCache();
-		mThumbnailsUpdateTimer = new Timer();
-		mThumbnailsUpdateTimer.scheduleAtFixedRate(new TimerTask() {
-			@Override
-			public void run() {
-				mActivity.runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						updateImageTimesInCache(refreshRate);
-						notifyDataSetChanged();
-					}
-				});
-			}
-		}, initialDelay, refreshRate);
+		notifyDataSetChanged();
 	}
 
 	public void stopRefresh() {
-		commitTimeUpdatesToCache();
 	}
 
 	public void populateImageViewTimesCache() {
 		mImageViewTimesCache.clear();
 		for (String path : mImagePaths) {
+			Log.d(TAG, "Adding to cache" + path + ": " + mPrefs.getInt(path, 0));
 			mImageViewTimesCache.put(path, mPrefs.getInt(path, 0));
 		}
-	}
-
-	public void updateImageTimesInCache(int updateMs) {
-		for (Map.Entry<String, Integer> entry : mImageViewTimesCache.entrySet()) {
-			String path = entry.getKey();
-			int currentTime = mImageViewTimesCache.get(path);
-			mImageViewTimesCache.put(path, Math.min(MainActivity.sTimeToImageDeath, currentTime + updateMs));
-		}
-	}
-
-	public void commitTimeUpdatesToCache() {
-		Editor prefsEditor = mPrefs.edit();
-		for (Map.Entry<String, Integer> image : mImageViewTimesCache.entrySet()) {
-			prefsEditor.putInt(image.getKey(), image.getValue().intValue());
-		}
-		prefsEditor.commit();
 	}
 
 	@Override
@@ -141,7 +112,7 @@ public class GalleryAdapter extends BaseAdapter {
 		if (convertView == null) {
 			imageView = new ImageView(mActivity);
 			imageView.setTag(path);
-			imageView.setLayoutParams(new GridView.LayoutParams(200, 200));
+			imageView.setLayoutParams(new GridView.LayoutParams(150, 150));
 			imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 			imageView.setPadding(0,10,0,10);
 		} else {
@@ -163,7 +134,7 @@ public class GalleryAdapter extends BaseAdapter {
 			}
 		} else {
 			imageView.clearAnimation();
-			setArtifactInducedBitmap(imageView, cached);
+			imageView.setImageBitmap(cached);
 		}
 
 		return imageView;
@@ -174,10 +145,9 @@ public class GalleryAdapter extends BaseAdapter {
 		return mImagePaths.length;
 	}
 
-	public void setArtifactInducedBitmap(ImageView iv, Bitmap bmp) {
-		int timeViewed = mImageViewTimesCache.get(iv.getTag()).intValue();
-		bmp = mArtifactInducer.induceArtifacts(bmp, mDisplayWidth, mDisplayHeight, (float) timeViewed/MainActivity.sTimeToImageDeath);
-		iv.setImageBitmap(bmp);
+	public Bitmap getArtifactInducedBitmap(String path, Bitmap bmp) {
+		int timeViewed = mImageViewTimesCache.get(path).intValue();
+		return mArtifactInducer.induceArtifacts(bmp, mDisplayWidth, mDisplayHeight, (float) timeViewed/MainActivity.sTimeToImageDeath);
 	}
 
 	class ImageLoader extends AsyncTask<String, Void, Void> {
@@ -186,7 +156,7 @@ public class GalleryAdapter extends BaseAdapter {
 			String path = paths[0];
 			Bitmap bmp = GalleryActivity.decodeSampledBitmapFromPath(
 					GalleryAdapter.this.mActivity, path, 100, 100);
-			GalleryAdapter.this.mImageCache.put(path, bmp);
+			GalleryAdapter.this.mImageCache.put(path, getArtifactInducedBitmap(path, bmp));
 			return null;
 		}
 		

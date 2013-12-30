@@ -21,15 +21,16 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
@@ -60,18 +61,7 @@ public class MainActivity extends Activity {
 		mPreview.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mCamera.takePicture(null, null, new PictureCallback() {
-					@Override
-					public void onPictureTaken(byte[] data, Camera camera) {
-						new WritePhotoTask().execute(data);
-						new Handler().postDelayed(new Runnable() {
-							@Override
-							public void run() {
-								if (mCamera != null) mCamera.startPreview();
-							}
-						}, 100);
-					}
-				});
+				takePicture();
 			}
 		});
 
@@ -102,6 +92,23 @@ public class MainActivity extends Activity {
 		destroyCameraAndPreview();
 	}
 
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		switch(keyCode) {
+		case KeyEvent.KEYCODE_DPAD_CENTER:
+			takePicture();
+		default:
+			return super.onKeyDown(keyCode, event);    
+		}
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+
 	void setupCameraAndPreview() {
 		mCamera = Camera.open(mCurrentCameraId);
 		mPreview.setCamera(mCamera);
@@ -115,18 +122,25 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
-
 	public void openGallery(View sender) {
 		Intent intent = new Intent(this, GalleryActivity.class);
 		startActivity(intent);
 	}
 
+	public void takePicture() {
+		mCamera.takePicture(null, null, new PictureCallback() {
+			@Override
+			public void onPictureTaken(byte[] data, Camera camera) {
+				new WritePhotoTask().execute(data);
+				new Handler().postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						if (mCamera != null) mCamera.startPreview();
+					}
+				}, 100);
+			}
+		});
+	}
 	class Preview extends ViewGroup implements SurfaceHolder.Callback {
 		private final String TAG = Preview.class.getName();
 

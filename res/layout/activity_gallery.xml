@@ -14,7 +14,7 @@
         android:layout_alignParentTop="true"
         android:layout_centerVertical="true"
         android:layout_toRightOf="@+id/galleryCameraOpener"
-        android:numColumns="3" >
+        android:numColumns="4" >
 
     </GridView>
 

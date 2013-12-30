@@ -157,6 +157,7 @@ public class GalleryActivity extends Activity {
 	}
 
 	public void resetImageViewTimes() {
+		Log.d(TAG, "Resetting times");
 		mGalleryAdapter.mPrefs.edit().clear().commit();
 		mGalleryAdapter.populateImageViewTimesCache();
 		mGalleryAdapter.notifyDataSetChanged();
